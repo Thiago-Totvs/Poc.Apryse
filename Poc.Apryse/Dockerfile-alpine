@@ -1,0 +1,25 @@
+FROM mcr.microsoft.com/dotnet/sdk:6.0.418-alpine3.19-amd64 AS build
+WORKDIR /src
+COPY ["Poc.Apryse.csproj", "."]
+
+RUN dotnet restore "./Poc.Apryse.csproj"
+COPY . .
+WORKDIR "/src/."
+RUN dotnet build "Poc.Apryse.csproj" -c Release -o /app/build
+
+FROM build AS publish
+RUN dotnet publish "Poc.Apryse.csproj" -c Release -o /app/publish
+
+FROM mcr.microsoft.com/dotnet/aspnet:6.0.26-alpine3.19-amd64 AS base
+
+RUN apk add build-base
+
+WORKDIR /app
+ENV ASPNETCORE_URLS=http://+:8080
+EXPOSE 8080
+RUN addgroup nonroot && adduser -S -G nonroot nonroot
+USER nonroot
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "Poc.Apryse.dll"]
+
+FROM base AS final
