@@ -2,6 +2,7 @@ using AprysePoc.FileHelper;
 using Microsoft.AspNetCore.Mvc;
 using pdftron.PDF;
 using pdftron.SDF;
+using Poc.Apryse.Requests;
 
 namespace AprysePoc.Controllers
 {
@@ -55,6 +56,42 @@ namespace AprysePoc.Controllers
             {
 
                 Console.WriteLine($"**LOCAL CONSOLE** Unhandled exception while Opening File: {ex.Message}");
+            }
+
+            return new OkResult();
+        }
+
+        [HttpPost("merge")]
+        public IActionResult MergeFiles([FromForm] CombinarArquivosRequest request)
+        {
+            try
+            {
+                var resultMergedDocument = new PDFDoc();
+
+                foreach (var file in request.ArquivosPdf)
+                {
+                    using var document = new PDFDoc(file.GetBytesFromFormFile(), file.GetBytesFromFormFile().Length);
+
+                    if (!document.InitSecurityHandler())
+                        return new BadRequestObjectResult("ERROR! Document is encrypted");
+
+                    for (int i = 1; i <= document.GetPageCount(); i++)
+                    {
+                        var page = document.GetPage(i);
+
+                        resultMergedDocument.PageInsert(resultMergedDocument.GetPageIterator(), page);
+                    }
+                }
+
+                var bytesResult = resultMergedDocument.Save(SDFDoc.SaveOptions.e_linearized);
+
+                resultMergedDocument.Save($"./ArquivosGeradosLocalTest/{request.NomeArquivo}.pdf", SDFDoc.SaveOptions.e_linearized);
+
+                return new OkObjectResult(bytesResult);
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine($"**LOCAL CONSOLE** Unhandled exception while Merging Files: {ex.Message}");
             }
 
             return new OkResult();
