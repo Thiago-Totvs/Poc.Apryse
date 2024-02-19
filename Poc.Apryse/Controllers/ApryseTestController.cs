@@ -21,7 +21,7 @@ namespace AprysePoc.Controllers
 
                 pdftron.PDFNet.Initialize(APRYSE_KEY);
 
-                Console.WriteLine("**LOCAL CONSOLE** Foxit Lib successfully initialized.");
+                Console.WriteLine("**LOCAL CONSOLE** Apryse Lib successfully initialized.");
 
             }
             catch (Exception ex)
