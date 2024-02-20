@@ -31,7 +31,7 @@ namespace AprysePoc.Controllers
             }
         }
 
-        [HttpPost("open")]
+        [HttpPost("Open")]
         public IActionResult OpenFile(IFormFile formFile)
         {
             try
@@ -58,7 +58,7 @@ namespace AprysePoc.Controllers
             return new OkResult();
         }
 
-        [HttpPost("merge")]
+        [HttpPost("Merge")]
         public IActionResult MergeFiles([FromForm] CombinarArquivosRequest request)
         {
             try
@@ -73,7 +73,7 @@ namespace AprysePoc.Controllers
                     if (!document.InitSecurityHandler()) //Verify if is ecrypted
                         return new BadRequestObjectResult("ERROR! Document is encrypted");
 
-                    resultMergedDocument.InsertPages(resultMergedDocument.GetPageCount() + 1, 
+                    resultMergedDocument.InsertPages(resultMergedDocument.GetPageCount() + 1,
                             document, 1, document.GetPageCount(), PDFDoc.InsertFlag.e_none);
                     //InsertPages Parameters:
                     //Berfore x Pages
@@ -88,7 +88,7 @@ namespace AprysePoc.Controllers
 
                 return new OkObjectResult(resultMergedDocument.Save(SDFDoc.SaveOptions.e_incremental)); //Return bytes
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine($"**LOCAL CONSOLE** Unhandled exception while Merging Files: {ex.Message}");
             }
@@ -97,7 +97,7 @@ namespace AprysePoc.Controllers
         }
 
 
-        [HttpPost("addhash")]
+        [HttpPost("AddHash")]
         public IActionResult AddHash(IFormFile formFile)
         {
             try
@@ -121,7 +121,47 @@ namespace AprysePoc.Controllers
                 var hash = "CÓDIGO: D9-60-6A-33-B5-56-F0-11-90-9C-42-22-25-7D-40-C6-9F-E5-BB-54";
                 stamper.StampText(doc, hash, new PageSet(1, doc.GetPageCount())); //PageSet define range pages
 
-                doc.Save("./teste.pdf", SDFDoc.SaveOptions.e_incremental); //Save local to check changes
+                doc.Save("./AddHashTest.pdf", SDFDoc.SaveOptions.e_incremental); //Save local to check changes
+
+                return new OkObjectResult(doc.Save(SDFDoc.SaveOptions.e_incremental)); //Return bytes
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"**LOCAL CONSOLE** Unhandled exception while Adding Hash to File: {ex.Message}");
+            }
+
+            return new OkResult();
+        }
+
+
+        [HttpPost("AddRubric")]
+        public IActionResult AddRubric(IFormFile formFile)
+        {
+            try
+            {
+                var doc = new PDFDoc(formFile.GetBytesFromFormFile(), formFile.GetBytesFromFormFile().Length);
+
+                if (!doc.InitSecurityHandler()) //Verify if is ecrypted
+                    return new BadRequestObjectResult("ERROR! Document is encrypted");
+
+                var stamper = new Stamper(SizeType.e_relative_scale, 0.08, 0.08); //Define text size
+
+                stamper.SetPosition(-0.45, -0.47, true); //true -> percentage
+                                                         //false -> pixel
+
+                ////Using default aligment cant add margin
+                //stamper.SetAlignment(HorizontalAlignment.e_horizontal_left, VerticalAlignment.e_vertical_bottom);
+
+                var archiveBytes = System.IO.File.ReadAllBytes("./RubricTest.png");
+                //Using Rubric png Test
+
+                Image img = Image.Create(doc, archiveBytes); //Can create Image from bytes or local path
+
+                stamper.SetAsBackground(false); // set image stamp as foreground
+
+                stamper.StampImage(doc, img, new PageSet(1, doc.GetPageCount())); //Stamp Image
+
+                doc.Save("./AddRubricTest.pdf", SDFDoc.SaveOptions.e_incremental); //Save local to check changes
 
                 return new OkObjectResult(doc.Save(SDFDoc.SaveOptions.e_incremental)); //Return bytes
             }
