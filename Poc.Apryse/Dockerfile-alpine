@@ -12,8 +12,6 @@ RUN dotnet publish "Poc.Apryse.csproj" -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:6.0.26-alpine3.19-amd64 AS base
 
-RUN apk add build-base
-
 WORKDIR /app
 ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
