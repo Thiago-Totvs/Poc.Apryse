@@ -10,9 +10,16 @@ RUN dotnet build "Poc.Apryse.csproj" -c Release -o /app/build
 FROM build AS publish
 RUN dotnet publish "Poc.Apryse.csproj" -c Release -o /app/publish
 
-FROM mcr.microsoft.com/dotnet/aspnet:6.0.26-alpine3.19-amd64 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:6.0.26-alpine3.18-amd64 AS base
 
 WORKDIR /app
+
+# Copy the HTML2PDFLinux.tar.gz archive into the container
+COPY ./HTML2PDFLinux.tar.gz .
+
+# Unzip the archive into the /app directory
+RUN tar -xzvf HTML2PDFLinux.tar.gz -C /app
+
 ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
 RUN addgroup nonroot && adduser -S -G nonroot nonroot
