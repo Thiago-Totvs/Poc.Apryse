@@ -239,49 +239,32 @@ namespace AprysePoc.Controllers
 
         //NOT WORKING, TICKET ALREADY CREATED
 
-        //[HttpPost("ConvertToPDFA")]
-        //public IActionResult ConvertToPDFA(IFormFile formFile)
-        //{
-        //    try
-        //    {
+        [HttpPost("ConvertToPDFA")]
+        public IActionResult ConvertToPDFA(IFormFile formFile)
+        {
+            try
+            {
 
-        //        PDFNet.SetColorManagement(PDFNet.CMSType.e_lcms);
+                PDFNet.SetColorManagement(PDFNet.CMSType.e_lcms);
 
-        //        var doc = new PDFDoc(formFile.GetBytesFromFormFile(), formFile.GetBytesFromFormFile().Length);
+                var doc = new PDFDoc(formFile.GetBytesFromFormFile(), formFile.GetBytesFromFormFile().Length);
 
-        //        var docBinary = doc.Save(SDFDoc.SaveOptions.e_incremental);
+                var docBinary = doc.Save(SDFDoc.SaveOptions.e_incremental);
 
-        //        using var pdf_a = new PDFACompliance(true, docBinary, null, PDFACompliance.Conformance.e_Level3B, null, 10, false);
+                using var pdf_a = new PDFACompliance(true, docBinary, null, PDFACompliance.Conformance.e_Level3B, null, 10, false);
 
-        //        var errorsCount = pdf_a.GetErrorCount();
-        //        var errorString = new List<string>();
+                pdf_a.SaveAs("./ArquivosGeradosLocalTest/ConvertToPDFA.pdf", false);
+                //Save local to check changes
 
-        //        for (var i = 0; i < errorsCount; i++)
-        //        {
-        //            var error = pdf_a.GetError(i);
+                return new OkObjectResult(pdf_a.SaveAs(false)); //Return bytes
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"**LOCAL CONSOLE** Unhandled exception while Adding Rubric to File Pages: {ex.Message}");
+            }
 
-        //            var stringError = PDFACompliance.GetPDFAErrorMessage(error);
-
-        //            errorString.Add(stringError);
-        //        }
-
-        //        if (errorString.Any())
-        //        {
-        //            return new BadRequestObjectResult(errorString);
-        //        }
-
-        //        pdf_a.SaveAs("./ArquivosGeradosLocalTest/ConvertToPDFA.pdf", false);
-        //        //Save local to check changes
-
-        //        return new OkObjectResult(pdf_a.SaveAs(false)); //Return bytes
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine($"**LOCAL CONSOLE** Unhandled exception while Adding Rubric to File Pages: {ex.Message}");
-        //    }
-
-        //    return new OkResult();
-        //}
+            return new OkResult();
+        }
 
 
         //NOT WORKING, TICKET ALREADY CREATED
