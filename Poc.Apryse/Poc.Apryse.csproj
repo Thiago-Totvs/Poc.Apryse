@@ -17,6 +17,7 @@
 	<ItemGroup>
 		<PackageReference Include="PDFTron.NET.x64" Version="10.7.0" />
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+		<PackageReference Include="System.Drawing.Common" Version="8.0.2" />
 	</ItemGroup>
 
 	<ItemGroup>
