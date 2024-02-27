@@ -3,10 +3,10 @@ using Microsoft.AspNetCore.Mvc;
 using pdftron;
 using pdftron.Filters;
 using pdftron.PDF;
-using pdftron.PDF.PDFA;
 using pdftron.SDF;
 using Poc.Apryse.Requests;
 using static pdftron.PDF.PDFDoc;
+using System.Drawing;
 using static pdftron.PDF.Stamper;
 using Convert = pdftron.PDF.Convert;
 
@@ -122,13 +122,13 @@ namespace AprysePoc.Controllers
                 //Using default aligment cant add margin
                 //stamper.SetAlignment(HorizontalAlignment.e_horizontal_left, VerticalAlignment.e_vertical_top);
 
-                stamper.SetFont(Font.Create(doc, Font.StandardType1Font.e_courier, true)); //Can change Font
+                stamper.SetFont(pdftron.PDF.Font.Create(doc, pdftron.PDF.Font.StandardType1Font.e_courier, true)); //Can change Font
                 stamper.SetFontColor(new ColorPt(0, 0, 0, 0)); //Color black
 
                 var hash = "CÓDIGO: D9-60-6A-33-B5-56-F0-11-90-9C-42-22-25-7D-40-C6-9F-E5-BB-54";
                 stamper.StampText(doc, hash, new PageSet(1, doc.GetPageCount())); //PageSet define range pages
 
-                doc.Save("./ArquivosGeradosLocalTest/AddHashTest.pdf", SDFDoc.SaveOptions.e_incremental); 
+                doc.Save("./ArquivosGeradosLocalTest/AddHashTest.pdf", SDFDoc.SaveOptions.e_incremental);
                 //Save local to check changes
 
                 return new OkObjectResult(doc.Save(SDFDoc.SaveOptions.e_incremental)); //Return bytes
@@ -143,7 +143,7 @@ namespace AprysePoc.Controllers
 
 
         [HttpPost("AddRubric")]
-        public IActionResult AddRubric(IFormFile formFile)
+        public IActionResult AddRubric(IFormFile formFile, int qtdeRubricas)
         {
             try
             {
@@ -152,24 +152,25 @@ namespace AprysePoc.Controllers
                 if (!doc.InitSecurityHandler()) //Verify if is ecrypted
                     return new BadRequestObjectResult("ERROR! Document is encrypted");
 
-                var stamper = new Stamper(SizeType.e_relative_scale, 0.08, 0.08); //Define text size
+                var stamper = new Stamper(SizeType.e_absolute_size, 300, 500); //Define text size
 
-                stamper.SetPosition(-0.45, -0.47, true); //true -> percentage
+                stamper.SetPosition(-0.35, -0.45, true); //true -> percentage
                                                          //false -> pixel
 
                 ////Using default aligment cant add margin
                 //stamper.SetAlignment(HorizontalAlignment.e_horizontal_left, VerticalAlignment.e_vertical_bottom);
 
-                var archiveBytes = System.IO.File.ReadAllBytes("./RubricTest.png");
+                //var multipleImages = System.IO.File.ReadAllBytes("./RubricTest.png");
+                var multipleImages = GetRubricas(qtdeRubricas);
                 //Using Rubric png Test
 
-                Image img = Image.Create(doc, archiveBytes); //Can create Image from bytes or local path
+                var img = pdftron.PDF.Image.Create(doc, multipleImages); //Can create Image from bytes or local path
 
                 stamper.SetAsBackground(false); // set image stamp as foreground
 
                 stamper.StampImage(doc, img, new PageSet(1, doc.GetPageCount())); //Stamp Image
 
-                doc.Save("./ArquivosGeradosLocalTest/AddRubricTest.pdf", SDFDoc.SaveOptions.e_incremental); 
+                doc.Save("./ArquivosGeradosLocalTest/AddRubricTest.pdf", SDFDoc.SaveOptions.e_incremental);
                 //Save local to check changes
 
                 return new OkObjectResult(doc.Save(SDFDoc.SaveOptions.e_incremental)); //Return bytes
@@ -295,6 +296,41 @@ namespace AprysePoc.Controllers
             }
 
             return new OkResult();
+        }
+
+        private byte[] GetRubricas(int qtdeRubricas)
+        {
+            var width = 0;
+            var height = 0;
+            var bitmapList = new List<Bitmap>();
+            var imageBytes = System.IO.File.ReadAllBytes("./RubricTest.png");
+
+            for (int i = 0; i < qtdeRubricas; i++)
+            {
+                using var stream = new MemoryStream(imageBytes);
+                var image = new Bitmap(stream);
+                width += image.Width;
+                height = image.Height > height ? image.Height : height;
+                bitmapList.Add(image);
+            }
+
+            var combinedBitmaps = new Bitmap(width + qtdeRubricas * 10, height);
+
+            using (var g = Graphics.FromImage(combinedBitmaps))
+            {
+                int offset = 0;
+                foreach (var imagem in bitmapList)
+                {
+                    g.DrawImage(imagem, new Rectangle(offset, 0, imagem.Width, imagem.Height));
+                    offset += 10 + imagem.Width;
+                }
+            }
+
+            using (var stream = new MemoryStream())
+            {
+                combinedBitmaps.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+                return stream.ToArray();
+            }
         }
     }
 }
