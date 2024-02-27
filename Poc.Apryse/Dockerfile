@@ -1,4 +1,5 @@
 FROM mcr.microsoft.com/dotnet/sdk:6.0-bullseye-slim AS build
+
 WORKDIR /src
 COPY ["Poc.Apryse.csproj", "."]
 
@@ -10,7 +11,7 @@ RUN dotnet build "Poc.Apryse.csproj" -c Release -o /app/build
 FROM build AS publish
 RUN dotnet publish "Poc.Apryse.csproj" -c Release -o /app/publish
 
-FROM mcr.microsoft.com/dotnet/aspnet:6.0.27-bookworm-slim-amd64 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:6.0-bookworm-slim AS base
 
 RUN apt-get update
 
@@ -52,5 +53,6 @@ RUN useradd nonroot -m
 USER nonroot
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "Poc.Apryse.dll"]
+
 
 FROM base AS final
