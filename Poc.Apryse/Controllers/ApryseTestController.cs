@@ -8,7 +8,7 @@ using Poc.Apryse.Requests;
 using static pdftron.PDF.PDFDoc;
 using System.Drawing;
 using static pdftron.PDF.Stamper;
-using Convert = pdftron.PDF.Convert;
+using pdftron.PDF.PDFA;
 
 namespace AprysePoc.Controllers
 {
@@ -206,7 +206,7 @@ namespace AprysePoc.Controllers
 
                     var options = new ConversionOptions();
 
-                    var documentConversion = Convert.StreamingPDFConversion(memoryFilter, options);
+                    var documentConversion = pdftron.PDF.Convert.StreamingPDFConversion(memoryFilter, options);
 
                     while (documentConversion.GetConversionStatus() == DocumentConversionResult.e_document_conversion_incomplete)
                     {
@@ -288,7 +288,9 @@ namespace AprysePoc.Controllers
 
                 doc.Save("./AddManifestPageTest.pdf", SDFDoc.SaveOptions.e_incremental); //Save local to check changes
 
-                return new OkObjectResult(doc.Save(SDFDoc.SaveOptions.e_incremental)); //Return bytes
+                var base64Pdf = System.Convert.ToBase64String(doc.Save(SDFDoc.SaveOptions.e_incremental));
+
+                return new OkObjectResult(base64Pdf); //Return bsae64
             }
             catch (Exception ex)
             {
